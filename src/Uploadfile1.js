@@ -56,25 +56,51 @@ const Uploadfile1 = () => {
   };
   
    useEffect(() => {
-     axios.get("http://localhost:8000/get-products")
-       .then((res) => {
-         console.warn("Details", res);
-        //  console.log("filename of the image",res.data.filename)
-         setFormData(res.data)
-        //  console.log(formData, "data")
-         const found = formData.find(obj => { return obj.filename; })
-        //  found = found.filename;
-         console.log("the filename of the given file", found.filename)
-         let namefile = found.filename;
-         let image = `data:{image.img.contentType};base64,$(data.img.data.toString('base64'))`;
+    //  axios.get("http://localhost:8000/get-products")
+    //    .then((res) => {
+    //      console.warn("Details", res);
+    //     //  console.log("filename of the image",res.data.filename)
+    //      setFormData(res.data)
+    //     //  console.log(formData, "data")
+    //      const found = formData.find(obj => { return obj.filename; })
+    //     //  found = found.filename;
+    //      console.log("the filename of the given file", found.filename)
+    //      let namefile = found.filename;
+    //      let image = `data:{image.img.contentType};base64,$(data.img.data.toString('base64'))`;
 
-        //  console.log(res.)
-       }).catch(() => {
-         console.info("get failed");
-     })
+    //     //  console.log(res.)
+    //    }).catch(() => {
+    //      console.info("get failed");
+    //  })
+     fetchData()
   
    }, [])
-   
+   const fetchData = () => {
+     axios
+       .get("http://localhost:8000/get-products")
+       .then((res) => {
+         console.warn("Details", res);
+         setFormData(res.data);
+       })
+       .catch(() => {
+         console.info("get failed");
+       });
+   };
+
+   function handleDelete() {
+     axios
+       .post("http://localhost:8000/deleteAll")
+
+       .then((res) => {
+         fetchData();
+         window.location.reload();
+         console.warn("response", res);
+       })
+       .catch((err) => {
+         console.error(err, "error");
+       });
+   }
+
 
   const items = [
     {
@@ -154,6 +180,9 @@ const Uploadfile1 = () => {
       </div>
       <div>
         <Table columns={items} dataSource={formData} />
+      </div>
+      <div>
+        <Button onClick={() => handleDelete(items)}>Delete All</Button>
       </div>
     </>
   );

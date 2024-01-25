@@ -1,168 +1,112 @@
-// const express = require("express");
-// const cors = require("cors");
-// const app = express();
+import React, { useEffect, useState } from "react";
+import { UploadOutlined } from "@ant-design/icons";
+import axios from "axios";
+import { Button, Upload, Form, Input, Table } from "antd";
 
-// const UserSchema=require("./Models/usedata")
-// app.use(cors());
-// app.use(express.json());
+const App = () => {
+  const [fileList, setFileList] = useState([]);
+  const [productData, setProductData] = useState();
 
-// const mongoose=require("mongoose");
-
-// mongoose.connect("mongodb://127.0.0.1:27017/", {
-//   dbName: "WebsiteDatabase",
-// });
-
-// const User = mongoose.model("login",UserSchema);
-// User.createIndexes();
-
-// // api to get the data from user
-// app.post("/register",async(req,res)=>{
-//   try {
-   
-//     console.log("sdfsdf", req.body);
-//     const user = new User(req.body);
-//     let result = await user.save();
-//     result = result.toObject();
-//     console.warn("sdfsdf", result);
-//   } catch (error) {
-//     res.send("there is error")
-//   }
-// })
-
-// // API to update user data by ID
-// app.put("/update/:id", async (req, res) => {
-//   try {
-//     const userId = req.params.id;
-//     const updateData = req.body;
-
-//     const result = await User.findByIdAndUpdate(userId, updateData, {
-//       new: true,
-     
-//     });
-//     console.log(result)
-//     if (!result) {
-//       return res.status(404).send("User not found");
-//     }
-
-//     res.send(result);
-//   } catch (error) {
-//     res.status(500).send("There is an error");
-//   }
-// });
-
-
-// app.listen(8000, () => {
-//   console.log(Server is running on port 8000.);
-// });
-import React, { useState, useEffect } from 'react';
-import { Form, Button, Input } from 'antd';
-import axios from 'axios';
-
-const Test = () => {
-  const [form] = Form.useForm();
-  const [userId, setUserId] = useState('');
-
-  const onFinish = async (values) => {
-    try {
-      const response = await axios.put("http://localhost:8000/update/${userId}", values);
-      console.log('Update response:', response.data);
-      console.log(response,"this is your response")
-    } catch (error) {
-      console.error('Error updating user:', error);
-    }
+  const props = {
+    onRemove: (file) => {
+      const index = fileList.indexOf(file);
+      const newFileList = fileList.slice();
+      newFileList.splice(index, 1);
+      setFileList(newFileList);
+    },
+    beforeUpload: (file) => {
+      if (file.size <= 2000000) {
+        setFileList([...fileList, file]);
+        return false;
+      } else {
+        window.alert("Maximum upload size exceeded");
+      }
+    },
+    fileList,
   };
 
-  const onFinishFailed = (errorInfo) => {
-    console.log('Failed:', errorInfo);
+  const handleUpload = (values) => {
+    const formData = new FormData();
+    formData.append("description", values?.description);
+    formData.append("rating", values?.rating);
+
+    let FileListing = values?.file?.fileList;
+    FileListing.forEach((file) => {
+      formData.append("file", file.originFileObj);
+    });
+
+    axios
+      .post("http://localhost:8000/upload", formData)
+      .then((res) => {
+        window.location.reload();
+      })
+      .catch(() => {
+        console.info("Upload failed.");
+      })
+      .finally(() => {});
   };
 
-  const handleUserIdChange = (e) => {
-    setUserId(e.target.value);
-    console.log(setUserId,"my id")
-  };
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/get-products")
+      .then((res) => {
+        console.warn("Products", res);
+        setProductData(res.data);
+      })
+      .catch(() => {
+        console.info("Upload failed.");
+      });
+  }, []);
+
+  const items = [
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+    },
+    {
+      title: "Rating",
+      dataIndex: "rating",
+      key: "rating",
+    },
+    {
+      title: "Image",
+      dataIndex: "filename",
+      key: "filename",
+      render: (item) => <div>{console.warn("TEST", item)}</div>,
+    },
+  ];
 
   return (
     <>
-      <Form
-        form={form}
-        name="basic"
-        labelCol={{
-          span: 8,
-        }}
-        wrapperCol={{
-          span: 16,
-        }}
-        style={{
-          maxWidth: 600,
-        }}
-        initialValues={{
-          remember: true,
-        }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        autoComplete="off"
-      >
-        <Form.Item
-          label="User ID"
-          name="userId"
-          rules={[
-            {
-              required: true,
-              message: 'Please input the user ID!',
-            },
-          ]}
-        >
-          <Input onChange={handleUserIdChange} />
-        </Form.Item>
+      <div className="mainWrapper">
+        <Form name="file upload" onFinish={handleUpload}>
+          <Form.Item label="Description" name="description">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Rating" name="rating">
+            <Input />
+          </Form.Item>
+          <Form.Item label="select file to upload" name="file">
+            <Upload
+              {...props}
+              accept="image/png, image/jpeg"
+              maxCount={1}
+              name="imagefile"
+            >
+              <Button icon={<UploadOutlined />}>Select File</Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item>
+            <Button htmlType="submit">Submit</Button>
+          </Form.Item>
+        </Form>
+      </div>
 
-        <Form.Item
-          label="name"
-          name="name"
-          rules={[
-            {
-              required: true,
-              message: 'Please input your username!',
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-
-        <Form.Item
-          label="email"
-          name="email"
-          rules={[
-            {
-              required: true,
-              message: 'Please input your password!',
-            },
-          ]}
-        >
-          <Input.Password />
-        </Form.Item>
-
-        <Form.Item
-          name="remember"
-          valuePropName="checked"
-          wrapperCol={{
-            offset: 8,
-            span: 16,
-          }}
-        ></Form.Item>
-
-        <Form.Item
-          wrapperCol={{
-            offset: 8,
-            span: 16,
-          }}
-        >
-          <Button type="primary" htmlType="submit">
-            Update
-          </Button>
-        </Form.Item>
-      </Form>
+      <div className="tableSection">
+        <Table columns={items} dataSource={productData} />
+      </div>
     </>
   );
 };
-
-export default Test;
+export default App;

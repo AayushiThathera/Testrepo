@@ -117,6 +117,17 @@ app.get("/get-products", async (req, res) => {
   res.status(200).send(data);
 });
 
+
+//delete all
+app.post("/deleteAll", async (req, res) => {
+  try {
+    const deleteAll = await Products.deleteMany({});
+    res.status(200).send(deleteAll);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 //port number
 
 app.listen(8000, () => {
